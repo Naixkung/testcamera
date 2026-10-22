@@ -135,6 +135,7 @@ let availableCameras = [];
 let currentCameraIndex = 0;
 let currentFacingMode = "environment"; // ค่าเริ่มต้นเป็นกล้องหลัง
 let currentCameraConfig = null;
+let isSwitchingCamera = false; // กันกดสลับกล้องซ้ำระหว่างที่กำลังสลับอยู่
 
 // ฟังก์ชันหยุดกล้องอย่างปลอดภัย
 function stopScanner() {
@@ -156,6 +157,12 @@ function stopScanner() {
 
 // ฟังก์ชันสลับกล้อง (หน้า / หลัง)
 function switchCamera() {
+    // กันกดซ้ำระหว่างกำลังสลับ หรือกล้องยังไม่พร้อม (เช่น กดเร็วเกินไปก่อน modal เปิดกล้องเสร็จ)
+    if (isSwitchingCamera || !html5QrcodeScanner) {
+        return;
+    }
+    isSwitchingCamera = true;
+    $('#btnSwitchCamera, #btnSwitchCameraFooter').prop('disabled', true);
     $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสลับกล้อง...').removeClass('text-success text-danger').addClass('text-primary');
 
     if (availableCameras && availableCameras.length > 1) {
@@ -168,7 +175,13 @@ function switchCamera() {
         currentCameraConfig = { facingMode: currentFacingMode };
     }
 
-    startScannerWithId(currentCameraConfig);
+    startScannerWithId(currentCameraConfig).catch(err => {
+        console.error("Switch camera failed", err);
+        $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> สลับกล้องไม่สำเร็จ').removeClass('text-primary text-success').addClass('text-danger');
+    }).finally(() => {
+        isSwitchingCamera = false;
+        $('#btnSwitchCamera, #btnSwitchCameraFooter').prop('disabled', false);
+    });
 }
 
 // ผูก Event ให้ปุ่มสลับกล้องทั้ง 2 จุด (Header และ Footer)
@@ -211,8 +224,11 @@ $('#scannerModal').on('shown.bs.modal', function () {
 
 // เริ่มสตรีมกล้อง
 function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
-    stopScanner().then(() => {
-        let config = { 
+    return stopScanner().then(() => {
+        // หน่วงเล็กน้อยให้กล้องเดิมปล่อย track ก่อนเปิดกล้องใหม่ (จำเป็นสำหรับการสลับกล้องบนมือถือหลายรุ่น)
+        return new Promise(resolve => setTimeout(resolve, 300));
+    }).then(() => {
+        let config = {
             fps: 20, 
             qrbox: { width: 300, height: 120 },
             formatsToSupport: [
@@ -235,7 +251,7 @@ function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
             };
         }
 
-        html5QrcodeScanner.start(
+        return html5QrcodeScanner.start(
             cameraIdOrConfig,
             config,
             function (decodedText, decodedResult) {
@@ -266,11 +282,12 @@ function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
         ).catch(err => {
             if (useHighRes) {
                 console.warn("High-res camera start failed, retrying with basic config...", err);
-                startScannerWithId(cameraIdOrConfig, false);
+                return startScannerWithId(cameraIdOrConfig, false);
             } else {
                 console.error("Camera start completely failed", err);
                 $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเปิดกล้องได้').removeClass('text-primary text-success').addClass('text-danger');
                 Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเปิดกล้องได้ (โปรดตรวจสอบสิทธิ์การใช้งานกล้องในเบราว์เซอร์)', 'error');
+                throw err; // ส่งต่อ error ให้ตัวเรียก (เช่น switchCamera) รู้ว่าล้มเหลว
             }
         });
     });
