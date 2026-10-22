@@ -137,6 +137,20 @@ let currentFacingMode = "environment"; // ค่าเริ่มต้นเ�
 let currentCameraConfig = null;
 let isSwitchingCamera = false; // กันกดสลับกล้องซ้ำระหว่างที่กำลังสลับอยู่
 
+// เลือกกล้อง "หลัง" และ "หน้า" มาอย่างละ 1 ตัวสำหรับสลับ
+// (มือถือรุ่นใหม่มักมีกล้องหลังหลายตัว เช่น wide/ultra-wide ถ้าวนสลับทุกตัวที่เจอ
+// จะไปเจอกล้องหลังตัวอื่นที่ใช้กับสแกนบาร์โค้ดไม่ได้ ทำให้ดูเหมือน "สลับกล้องหลังไม่ได้")
+function buildCameraToggleList(devices) {
+    const backCam = devices.find(d => /back|rear|environment/i.test(d.label));
+    const frontCam = devices.find(d => /front|user|face/i.test(d.label));
+    const list = [];
+    if (backCam) list.push(backCam);
+    if (frontCam && (!backCam || frontCam.id !== backCam.id)) list.push(frontCam);
+    if (list.length > 0) return list;
+    // หา label ไม่เจอเลย (บางเบราว์เซอร์ไม่ส่ง label มา) ใช้ 2 ตัวแรกที่เจอแทน
+    return devices.slice(0, 2);
+}
+
 // ฟังก์ชันหยุดกล้องอย่างปลอดภัย
 function stopScanner() {
     if (html5QrcodeScanner) {
@@ -202,11 +216,10 @@ $('#scannerModal').on('shown.bs.modal', function () {
     }
 
     Html5Qrcode.getCameras().then(devices => {
-        availableCameras = devices || [];
+        availableCameras = buildCameraToggleList(devices || []);
         if (availableCameras.length > 0) {
-            // ค้นหากล้องหลังก่อนเป็นอันดับแรก
-            let backIdx = availableCameras.findIndex(d => /back|rear|environment/i.test(d.label));
-            currentCameraIndex = (backIdx >= 0) ? backIdx : 0;
+            // ลิสต์ถูกจัดให้กล้องหลัง (ถ้าหาเจอ) อยู่ตัวแรกแล้วจาก buildCameraToggleList
+            currentCameraIndex = 0;
             currentCameraConfig = availableCameras[currentCameraIndex].id;
             currentFacingMode = "environment";
             startScannerWithId(currentCameraConfig);
