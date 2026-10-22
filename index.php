@@ -131,25 +131,8 @@
 // โค้ดควบคุมกล้องและการสลับกล้องหน้า/หลัง (Standalone Scanner)
 // ============================================================
 let html5QrcodeScanner = null;
-let availableCameras = [];
-let currentCameraIndex = 0;
 let currentFacingMode = "environment"; // ค่าเริ่มต้นเป็นกล้องหลัง
-let currentCameraConfig = null;
 let isSwitchingCamera = false; // กันกดสลับกล้องซ้ำระหว่างที่กำลังสลับอยู่
-
-// เลือกกล้อง "หลัง" และ "หน้า" มาอย่างละ 1 ตัวสำหรับสลับ
-// (มือถือรุ่นใหม่มักมีกล้องหลังหลายตัว เช่น wide/ultra-wide ถ้าวนสลับทุกตัวที่เจอ
-// จะไปเจอกล้องหลังตัวอื่นที่ใช้กับสแกนบาร์โค้ดไม่ได้ ทำให้ดูเหมือน "สลับกล้องหลังไม่ได้")
-function buildCameraToggleList(devices) {
-    const backCam = devices.find(d => /back|rear|environment/i.test(d.label));
-    const frontCam = devices.find(d => /front|user|face/i.test(d.label));
-    const list = [];
-    if (backCam) list.push(backCam);
-    if (frontCam && (!backCam || frontCam.id !== backCam.id)) list.push(frontCam);
-    if (list.length > 0) return list;
-    // หา label ไม่เจอเลย (บางเบราว์เซอร์ไม่ส่ง label มา) ใช้ 2 ตัวแรกที่เจอแทน
-    return devices.slice(0, 2);
-}
 
 // ฟังก์ชันหยุดกล้องอย่างปลอดภัย
 function stopScanner() {
@@ -179,17 +162,12 @@ function switchCamera() {
     $('#btnSwitchCamera, #btnSwitchCameraFooter').prop('disabled', true);
     $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสลับกล้อง...').removeClass('text-success text-danger').addClass('text-primary');
 
-    if (availableCameras && availableCameras.length > 1) {
-        // หากมีหลายกล้อง ให้วนสลับตามกล้องในเครื่อง
-        currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
-        currentCameraConfig = availableCameras[currentCameraIndex].id;
-    } else {
-        // หากตรวจไม่พบรายชื่อ ให้สลับโหมด facingMode (หน้า/หลัง)
-        currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
-        currentCameraConfig = { facingMode: currentFacingMode };
-    }
+    // สลับโหมดกล้องหน้า/หลัง แล้วให้เบราว์เซอร์/OS เลือกเลนส์จริงให้เอง (ผ่าน facingMode)
+    // แม่นยำกว่าการเลือก deviceId เอง เพราะมือถือหลายรุ่นมีกล้องหลังหลายเลนส์ (wide/ultra-wide)
+    // และ label ของกล้องจะว่างเปล่าจนกว่าจะได้รับสิทธิ์กล้องครั้งแรก ทำให้เดากล้องหลัง/หน้าจาก label ผิดได้
+    currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
 
-    startScannerWithId(currentCameraConfig).catch(err => {
+    startScannerWithFacing(currentFacingMode).catch(err => {
         console.error("Switch camera failed", err);
         $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> สลับกล้องไม่สำเร็จ').removeClass('text-primary text-success').addClass('text-danger');
     }).finally(() => {
@@ -209,34 +187,19 @@ $('#btnScanBarcode').click(function () {
     $('#scannerModal').modal('show');
 });
 
-// เมื่อ Modal แสดงผล ให้เปิดกล้องอัตโนมัติ
+// เมื่อ Modal แสดงผล ให้เปิดกล้องอัตโนมัติ (เริ่มที่กล้องหลังเสมอ)
 $('#scannerModal').on('shown.bs.modal', function () {
     if (!html5QrcodeScanner) {
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
     }
-
-    Html5Qrcode.getCameras().then(devices => {
-        availableCameras = buildCameraToggleList(devices || []);
-        if (availableCameras.length > 0) {
-            // ลิสต์ถูกจัดให้กล้องหลัง (ถ้าหาเจอ) อยู่ตัวแรกแล้วจาก buildCameraToggleList
-            currentCameraIndex = 0;
-            currentCameraConfig = availableCameras[currentCameraIndex].id;
-            currentFacingMode = "environment";
-            startScannerWithId(currentCameraConfig);
-        } else {
-            currentFacingMode = "environment";
-            currentCameraConfig = { facingMode: "environment" };
-            startScannerWithId(currentCameraConfig);
-        }
-    }).catch(err => {
-        currentFacingMode = "environment";
-        currentCameraConfig = { facingMode: "environment" };
-        startScannerWithId(currentCameraConfig);
-    });
+    currentFacingMode = "environment";
+    startScannerWithFacing(currentFacingMode);
 });
 
-// เริ่มสตรีมกล้อง
-function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
+// เริ่มสตรีมกล้องตามโหมดหน้า/หลังที่ระบุ
+// useExact=true ขอกล้องแบบเจาะจงเลย (facingMode: {exact}) ซึ่งแม่นยำที่สุดบนมือถือ
+// ถ้าเครื่องไม่รองรับ (เช่น โน้ตบุ๊กมีกล้องเดียว) จะร่วงมาใช้ facingMode แบบไม่ exact แทน
+function startScannerWithFacing(facingMode, useExact = true, useHighRes = true) {
     return stopScanner().then(() => {
         // หน่วงเล็กน้อยให้กล้องเดิมปล่อย track ก่อนเปิดกล้องใหม่ (จำเป็นสำหรับการสลับกล้องบนมือถือหลายรุ่น)
         return new Promise(resolve => setTimeout(resolve, 300));
@@ -264,8 +227,12 @@ function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
             };
         }
 
+        const cameraConstraint = useExact
+            ? { facingMode: { exact: facingMode } }
+            : { facingMode: facingMode };
+
         return html5QrcodeScanner.start(
-            cameraIdOrConfig,
+            cameraConstraint,
             config,
             function (decodedText, decodedResult) {
                 // เมื่ออ่านบาร์โค้ดสำเร็จ
@@ -293,9 +260,13 @@ function startScannerWithId(cameraIdOrConfig, useHighRes = true) {
                 }
             }
         ).catch(err => {
-            if (useHighRes) {
+            if (useExact) {
+                // เครื่องนี้ไม่มีกล้องที่ตรงกับโหมดที่ขอแบบเจาะจง (เช่น โน้ตบุ๊กมีกล้องเดียว) ลองแบบไม่ exact
+                console.warn("Exact facingMode failed, retrying without exact...", err);
+                return startScannerWithFacing(facingMode, false, useHighRes);
+            } else if (useHighRes) {
                 console.warn("High-res camera start failed, retrying with basic config...", err);
-                return startScannerWithId(cameraIdOrConfig, false);
+                return startScannerWithFacing(facingMode, false, false);
             } else {
                 console.error("Camera start completely failed", err);
                 $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเปิดกล้องได้').removeClass('text-primary text-success').addClass('text-danger');
