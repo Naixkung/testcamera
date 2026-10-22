@@ -4,9 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Standalone Barcode Scanner Test</title>
+    <title>ทดสอบ สแกนบาร์โค้ดสินค้า (สลับกล้องหน้า/หลัง)</title>
 
-    <!-- CDN ทั้งหมด 100% ไม่พึ่งพาไฟล์หรือระบบในโปรแกรม Housekeeping -->
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -17,7 +16,7 @@
 
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -49,33 +48,27 @@
 <body>
 
 <div class="scanner-card text-center">
-    <div class="mb-3">
-        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
-            <i class="fa-solid fa-code"></i> Standalone Test Page
-        </span>
-    </div>
-    
     <h3 class="fw-bold text-dark mb-2">
-        <i class="fa-solid fa-barcode text-success"></i> ทดสอบสแกนบาร์โค้ด
+        <i class="fa-solid fa-barcode text-success"></i> ทดสอบสแกนบาร์โค้ดสินค้า
     </h3>
     <p class="text-muted small mb-4">
-        หน้าทดสอบแบบอิสระ ไม่เชื่อมต่อกับฐานข้อมูลหรือระบบอื่นในเครื่อง
+        ทดสอบระบบสลับกล้องหน้า / กล้องหลัง (Standalone ไม่เกี่ยวกับระบบอื่น)
     </p>
 
     <!-- ปุ่มเปิด Modal สแกน -->
     <div class="d-grid gap-3 mb-4">
-        <button class="btn btn-success btn-lg fw-bold shadow-sm py-3" type="button" id="btnScanBarcode">
-            <i class="fa-solid fa-camera"></i> เปิดกล้องสแกนบาร์โค้ด
+        <button class="btn btn-primary btn-lg fw-bold shadow-sm py-3" type="button" id="btnScanBarcode">
+            <i class="fa-solid fa-barcode"></i> Scan สแกนบาร์โค้ดสินค้า
         </button>
     </div>
 
     <!-- กล่องแสดงผลลัพธ์ที่สแกนได้ -->
     <div class="text-start">
         <label class="form-label fw-bold small text-secondary">
-            <i class="fa-solid fa-circle-check text-success"></i> ผลการอ่านบาร์โค้ดล่าสุด:
+            <i class="fa-solid fa-circle-check text-success"></i> รหัสสินค้าที่อ่านได้:
         </label>
         <div class="input-group">
-            <input type="text" id="scanned_result_input" class="form-control form-control-lg bg-light fw-bold text-center text-primary" placeholder="-- รหัสจะแสดงที่นี่ --" readonly>
+            <input type="text" id="scanned_result_input" class="form-control form-control-lg bg-light fw-bold text-center text-primary" placeholder="-- ยังไม่มีข้อมูล --" readonly>
             <button class="btn btn-outline-secondary" type="button" id="btnCopyResult" title="คัดลอก">
                 <i class="fa-regular fa-copy"></i>
             </button>
@@ -84,25 +77,23 @@
 </div>
 
 <!-- ============================================================
-     Scanner Modal (หน้าต่างสแกนบาร์โค้ดสินค้า + สลับกล้องหน้า/หลัง)
+     Scanner Modal
 ============================================================ -->
 <div class="modal fade" id="scannerModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <!-- Header สีเขียว #00796b ตามแบบสแกนบาร์โค้ดสินค้า -->
             <div class="modal-header text-white" style="background:#00796b;">
                 <h5 class="modal-title fs-5 mb-0">
                     <i class="fa-solid fa-barcode"></i> สแกนบาร์โค้ดสินค้า
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-sm btn-light fw-bold shadow-sm" id="btnSwitchCamera" title="สลับกล้องหน้า/หลัง">
-                        <i class="fa-solid fa-arrows-rotate"></i> สลับกล้อง
+                        <i class="fa-solid fa-arrows-rotate"></i> สลับเป็นกล้องหน้า
                     </button>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
 
-            <!-- Body แสดงภาพจากกล้อง -->
             <div class="modal-body text-center p-3">
                 <div id="qr-reader"></div>
                 <p id="scan-status" class="mt-3 mb-0 fw-bold text-primary">
@@ -110,10 +101,9 @@
                 </p>
             </div>
 
-            <!-- Footer ปุ่มสลับกล้องด้านล่าง และปุ่มปิด -->
             <div class="modal-footer d-flex justify-content-between bg-light">
                 <button type="button" class="btn btn-primary fw-bold" id="btnSwitchCameraFooter">
-                    <i class="fa-solid fa-arrows-rotate"></i> สลับกล้องหน้า / หลัง
+                    <i class="fa-solid fa-arrows-rotate"></i> สลับเป็นกล้องหน้า
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
             </div>
@@ -121,171 +111,203 @@
     </div>
 </div>
 
-<!-- CDN Scripts (อิสระ 100%) -->
+<!-- CDN Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 // ============================================================
-// โค้ดควบคุมกล้องและการสลับกล้องหน้า/หลัง (Standalone Scanner)
+// Barcode Scanning & Front/Back Camera Switching Logic
 // ============================================================
 let html5QrcodeScanner = null;
-let currentFacingMode = "environment"; // ค่าเริ่มต้นเป็นกล้องหลัง
-let isSwitchingCamera = false; // กันกดสลับกล้องซ้ำระหว่างที่กำลังสลับอยู่
+let availableCameras = [];
+let isFrontCamera = false; // false = กล้องหลัง, true = กล้องหน้า
+let isSwitching = false;
 
-// ฟังก์ชันหยุดกล้องอย่างปลอดภัย
+function updateSwitchButtonLabels() {
+    let nextCam = isFrontCamera ? 'กล้องหลัง' : 'กล้องหน้า';
+    let btnHtml = '<i class="fa-solid fa-arrows-rotate"></i> สลับเป็น' + nextCam;
+    $('#btnSwitchCamera').html(btnHtml);
+    $('#btnSwitchCameraFooter').html(btnHtml);
+}
+
+function isScannerRunning() {
+    if (!html5QrcodeScanner) return false;
+    try {
+        if (typeof html5QrcodeScanner.getState === 'function') {
+            let state = html5QrcodeScanner.getState();
+            // 2 = SCANNING, 3 = PAUSED
+            return state === 2 || state === 3;
+        }
+    } catch (e) {}
+    return false;
+}
+
 function stopScanner() {
-    if (html5QrcodeScanner) {
-        let isRunning = false;
-        try {
-            isRunning = html5QrcodeScanner.isScanning;
-        } catch (e) {
-            isRunning = false;
-        }
-        if (isRunning) {
-            return html5QrcodeScanner.stop().catch(err => {
-                console.warn("Scanner stop warning:", err);
-            });
-        }
+    if (html5QrcodeScanner && isScannerRunning()) {
+        return html5QrcodeScanner.stop().catch(err => {
+            console.warn("Scanner stop warning:", err);
+        });
     }
     return Promise.resolve();
 }
 
-// ฟังก์ชันสลับกล้อง (หน้า / หลัง)
-function switchCamera() {
-    // กันกดซ้ำระหว่างกำลังสลับ หรือกล้องยังไม่พร้อม (เช่น กดเร็วเกินไปก่อน modal เปิดกล้องเสร็จ)
-    if (isSwitchingCamera || !html5QrcodeScanner) {
-        return;
+function startScannerWithTarget(targetCamera) {
+    if (!html5QrcodeScanner) {
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
     }
-    isSwitchingCamera = true;
-    $('#btnSwitchCamera, #btnSwitchCameraFooter').prop('disabled', true);
-    $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสลับกล้อง...').removeClass('text-success text-danger').addClass('text-primary');
 
-    // สลับโหมดกล้องหน้า/หลัง แล้วให้เบราว์เซอร์/OS เลือกเลนส์จริงให้เอง (ผ่าน facingMode)
-    // แม่นยำกว่าการเลือก deviceId เอง เพราะมือถือหลายรุ่นมีกล้องหลังหลายเลนส์ (wide/ultra-wide)
-    // และ label ของกล้องจะว่างเปล่าจนกว่าจะได้รับสิทธิ์กล้องครั้งแรก ทำให้เดากล้องหลัง/หน้าจาก label ผิดได้
-    currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+    // สำคัญมาก: ไม่ใส่ config.videoConstraints เพื่อไม่ให้ override targetCamera
+    let config = { 
+        fps: 20, 
+        qrbox: { width: 300, height: 120 },
+        formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.QR_CODE
+        ]
+    };
 
-    startScannerWithFacing(currentFacingMode).catch(err => {
-        console.error("Switch camera failed", err);
-        $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> สลับกล้องไม่สำเร็จ').removeClass('text-primary text-success').addClass('text-danger');
-    }).finally(() => {
-        isSwitchingCamera = false;
-        $('#btnSwitchCamera, #btnSwitchCameraFooter').prop('disabled', false);
+    return html5QrcodeScanner.start(
+        targetCamera,
+        config,
+        function (decodedText, decodedResult) {
+            $('#scan-status').html('<i class="fa-solid fa-circle-check"></i> อ่านสำเร็จ!').removeClass('text-primary text-danger').addClass('text-success');
+            if (navigator.vibrate) navigator.vibrate(200);
+
+            $('#scanned_result_input').val(decodedText);
+
+            setTimeout(() => {
+                stopScanner().finally(() => {
+                    $('#scannerModal').modal('hide');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'อ่านสำเร็จ!',
+                        html: 'รหัสสินค้า: <b class="text-success fs-4">' + decodedText + '</b>',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#198754'
+                    });
+                });
+            }, 500);
+        },
+        function (errorMessage) {
+            if ($('#scan-status').hasClass('text-primary') && !$('#scan-status').html().includes('กำลังค้นหา')) {
+                let camName = isFrontCamera ? 'กล้องหน้า' : 'กล้องหลัง';
+                $('#scan-status').html('<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังค้นหาบาร์โค้ด (' + camName + ')...').removeClass('text-success text-danger').addClass('text-primary');
+            }
+        }
+    ).then(() => {
+        let camName = isFrontCamera ? 'กล้องหน้า (Front)' : 'กล้องหลัง (Back)';
+        $('#scan-status').html('<i class="fa-solid fa-camera"></i> กำลังใช้งาน: ' + camName).removeClass('text-danger text-success').addClass('text-primary');
+        updateSwitchButtonLabels();
     });
 }
 
-// ผูก Event ให้ปุ่มสลับกล้องทั้ง 2 จุด (Header และ Footer)
+function switchCamera() {
+    if (isSwitching) return;
+    isSwitching = true;
+
+    // สลับสถานะ กล้องหน้า <-> กล้องหลัง
+    isFrontCamera = !isFrontCamera;
+    updateSwitchButtonLabels();
+
+    let targetMode = isFrontCamera ? "user" : "environment";
+    let target = null;
+
+    if (availableCameras && availableCameras.length > 0) {
+        if (isFrontCamera) {
+            let fc = availableCameras.find(d => /front|user|selfie|หน้า/i.test(d.label));
+            if (fc) {
+                target = fc.id;
+            } else if (availableCameras.length > 1) {
+                let nonBack = availableCameras.filter(d => !/back|rear|environment|หลัง/i.test(d.label));
+                target = (nonBack.length > 0) ? nonBack[nonBack.length - 1].id : availableCameras[availableCameras.length - 1].id;
+            }
+        } else {
+            let bc = availableCameras.find(d => /back|rear|environment|หลัง/i.test(d.label));
+            target = bc ? bc.id : availableCameras[0].id;
+        }
+    }
+
+    if (!target) {
+        target = { facingMode: targetMode };
+    }
+
+    let targetName = isFrontCamera ? "กล้องหน้า" : "กล้องหลัง";
+    $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังสลับไป ' + targetName + '...').removeClass('text-success text-danger').addClass('text-primary');
+
+    stopScanner().then(() => {
+        return startScannerWithTarget(target);
+    }).catch(err => {
+        console.warn("Start with device ID failed, retrying with facingMode " + targetMode, err);
+        return startScannerWithTarget({ facingMode: targetMode });
+    }).catch(err => {
+        console.warn("FacingMode failed, retrying fallback:", err);
+        if (availableCameras && availableCameras.length > 0) {
+            let altIdx = isFrontCamera ? (availableCameras.length - 1) : 0;
+            return startScannerWithTarget(availableCameras[altIdx].id);
+        }
+        throw err;
+    }).catch(err => {
+        console.error("Camera switch error:", err);
+        $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเปิด ' + targetName + ' ได้').removeClass('text-primary text-success').addClass('text-danger');
+        Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเปิด ' + targetName + ' ได้ (โปรดตรวจสอบสิทธิ์กล้อง)', 'error');
+    }).finally(() => {
+        isSwitching = false;
+    });
+}
+
 $(document).on('click', '#btnSwitchCamera, #btnSwitchCameraFooter', function () {
     switchCamera();
 });
 
-// กดปุ่มเพื่อเปิด Modal สแกน
 $('#btnScanBarcode').click(function () {
     $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังเตรียมกล้อง...').removeClass('text-success text-danger').addClass('text-primary');
     $('#scannerModal').modal('show');
 });
 
-// เมื่อ Modal แสดงผล ให้เปิดกล้องอัตโนมัติ (เริ่มที่กล้องหลังเสมอ)
 $('#scannerModal').on('shown.bs.modal', function () {
+    isFrontCamera = false; // เริ่มต้นที่กล้องหลังเสมอ
+    updateSwitchButtonLabels();
+    $('#scan-status').html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังเปิดกล้องหลัง...').removeClass('text-success text-danger').addClass('text-primary');
+
     if (!html5QrcodeScanner) {
         html5QrcodeScanner = new Html5Qrcode("qr-reader");
     }
-    currentFacingMode = "environment";
-    startScannerWithFacing(currentFacingMode);
-});
 
-// เริ่มสตรีมกล้องตามโหมดหน้า/หลังที่ระบุ
-// useExact=true ขอกล้องแบบเจาะจงเลย (facingMode: {exact}) ซึ่งแม่นยำที่สุดบนมือถือ
-// ถ้าเครื่องไม่รองรับ (เช่น โน้ตบุ๊กมีกล้องเดียว) จะร่วงมาใช้ facingMode แบบไม่ exact แทน
-function startScannerWithFacing(facingMode, useExact = true, useHighRes = true) {
-    return stopScanner().then(() => {
-        // หน่วงเล็กน้อยให้กล้องเดิมปล่อย track ก่อนเปิดกล้องใหม่ (จำเป็นสำหรับการสลับกล้องบนมือถือหลายรุ่น)
-        return new Promise(resolve => setTimeout(resolve, 300));
-    }).then(() => {
-        let config = {
-            fps: 20, 
-            qrbox: { width: 300, height: 120 },
-            formatsToSupport: [
-                Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.CODE_39,
-                Html5QrcodeSupportedFormats.CODE_93,
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.EAN_8,
-                Html5QrcodeSupportedFormats.UPC_A,
-                Html5QrcodeSupportedFormats.UPC_E,
-                Html5QrcodeSupportedFormats.ITF,
-                Html5QrcodeSupportedFormats.QR_CODE
-            ]
-        };
+    Html5Qrcode.getCameras().then(devices => {
+        availableCameras = devices || [];
+        let backCam = availableCameras.find(d => /back|rear|environment/i.test(d.label));
+        let target = backCam ? backCam.id : (availableCameras.length > 0 ? availableCameras[0].id : { facingMode: "environment" });
 
-        if (useHighRes) {
-            config.videoConstraints = {
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            };
-        }
-
-        const cameraConstraint = useExact
-            ? { facingMode: { exact: facingMode } }
-            : { facingMode: facingMode };
-
-        return html5QrcodeScanner.start(
-            cameraConstraint,
-            config,
-            function (decodedText, decodedResult) {
-                // เมื่ออ่านบาร์โค้ดสำเร็จ
-                $('#scan-status').html('<i class="fa-solid fa-circle-check"></i> อ่านสำเร็จ!').removeClass('text-primary text-danger').addClass('text-success');
-                if (navigator.vibrate) navigator.vibrate(200);
-
-                $('#scanned_result_input').val(decodedText);
-
-                setTimeout(() => {
-                    stopScanner().finally(() => {
-                        $('#scannerModal').modal('hide');
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'อ่านสำเร็จ!',
-                            html: 'รหัสบาร์โค้ด: <b class="text-success fs-5">' + decodedText + '</b>',
-                            confirmButtonText: 'ตกลง',
-                            confirmButtonColor: '#198754'
-                        });
-                    });
-                }, 500);
-            },
-            function (errorMessage) {
-                if ($('#scan-status').hasClass('text-primary') && !$('#scan-status').html().includes('กำลังค้นหา')) {
-                    $('#scan-status').html('<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังค้นหาบาร์โค้ด...').removeClass('text-success text-danger').addClass('text-primary');
-                }
-            }
-        ).catch(err => {
-            if (useExact) {
-                // เครื่องนี้ไม่มีกล้องที่ตรงกับโหมดที่ขอแบบเจาะจง (เช่น โน้ตบุ๊กมีกล้องเดียว) ลองแบบไม่ exact
-                console.warn("Exact facingMode failed, retrying without exact...", err);
-                return startScannerWithFacing(facingMode, false, useHighRes);
-            } else if (useHighRes) {
-                console.warn("High-res camera start failed, retrying with basic config...", err);
-                return startScannerWithFacing(facingMode, false, false);
-            } else {
-                console.error("Camera start completely failed", err);
-                $('#scan-status').html('<i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถเปิดกล้องได้').removeClass('text-primary text-success').addClass('text-danger');
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเปิดกล้องได้ (โปรดตรวจสอบสิทธิ์การใช้งานกล้องในเบราว์เซอร์)', 'error');
-                throw err; // ส่งต่อ error ให้ตัวเรียก (เช่น switchCamera) รู้ว่าล้มเหลว
-            }
+        stopScanner().then(() => {
+            return startScannerWithTarget(target);
+        }).catch(err => {
+            console.warn("Start with deviceId failed, fallback to facingMode:", err);
+            return startScannerWithTarget({ facingMode: "environment" });
+        });
+    }).catch(err => {
+        console.warn("getCameras failed, fallback to facingMode:", err);
+        stopScanner().then(() => {
+            return startScannerWithTarget({ facingMode: "environment" });
         });
     });
-}
+});
 
-// ปิดกล้องเมื่อปิด Modal
 $('#scannerModal').on('hidden.bs.modal', function () {
     stopScanner();
 });
 
-// ปุ่มคัดลอกรหัส
 $('#btnCopyResult').click(function () {
     let val = $('#scanned_result_input').val();
-    if (val && val !== '-- รหัสจะแสดงที่นี่ --') {
+    if (val && val !== '-- ยังไม่มีข้อมูล --') {
         navigator.clipboard.writeText(val);
         Swal.fire({
             toast: true,
